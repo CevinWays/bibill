@@ -50,7 +50,9 @@ class SubscriptionDetailPage extends StatelessWidget {
                 // When coming back, if we edited, this page has stale data.
                 // Simplest fix: Pop this page too? Or use a BlocBuilder that looks up the ID?
                 // Let's pop this page so user goes back to list.
-                Navigator.pop(context);
+                if (context.mounted) {
+                  Navigator.pop(context);
+                }
               });
             },
           ),
@@ -139,7 +141,9 @@ class SubscriptionDetailPage extends StatelessWidget {
               'Pengingat',
               subscription.reminders.isEmpty
                   ? 'Tidak ada'
-                  : '${subscription.reminders.map((e) => '$e hari sebelum').join(', ')}',
+                  : subscription.reminders
+                        .map((e) => '$e hari sebelum')
+                        .join(', '),
             ),
           ],
         ),
