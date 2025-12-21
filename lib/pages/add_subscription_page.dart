@@ -149,7 +149,7 @@ class _AddSubscriptionPageState extends State<AddSubscriptionPage> {
                       children: [
                         _buildLabel('Jenis Periode'),
                         DropdownButtonFormField<SubscriptionPeriod>(
-                          value: _selectedPeriod,
+                          initialValue: _selectedPeriod,
                           decoration: _inputDecoration(''),
                           items: SubscriptionPeriod.values.map((p) {
                             return DropdownMenuItem(
