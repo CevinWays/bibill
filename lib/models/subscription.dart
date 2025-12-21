@@ -1,5 +1,4 @@
 import 'package:equatable/equatable.dart';
-import 'package:uuid/uuid.dart';
 
 enum SubscriptionPeriod { weekly, monthly, quarterly, yearly }
 
@@ -9,16 +8,67 @@ class Subscription extends Equatable {
   final double price;
   final SubscriptionPeriod period;
   final DateTime firstBillDate;
-  final List<int> reminders; // Days before renewal, e.g., [7, 1]
+  final List<int> reminders;
 
-  Subscription({
+  const Subscription({
     String? id,
     required this.name,
     required this.price,
     required this.period,
     required this.firstBillDate,
     this.reminders = const [],
-  }) : id = id ?? const Uuid().v4();
+  }) : id =
+           id ??
+           ''; // Empty string temporarily, will be UUID if not provided by caller or DB
+
+  Subscription copyWith({
+    String? id,
+    String? name,
+    double? price,
+    SubscriptionPeriod? period,
+    DateTime? firstBillDate,
+    List<int>? reminders,
+  }) {
+    return Subscription(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      price: price ?? this.price,
+      period: period ?? this.period,
+      firstBillDate: firstBillDate ?? this.firstBillDate,
+      reminders: reminders ?? this.reminders,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'name': name,
+      'price': price,
+      'period': period.index,
+      'first_bill_date': firstBillDate.toIso8601String(),
+      'reminders': reminders.join(','),
+    };
+  }
+
+  factory Subscription.fromMap(Map<String, dynamic> map) {
+    String remindersStr = map['reminders'] as String? ?? '';
+    List<int> loadedReminders = [];
+    if (remindersStr.isNotEmpty) {
+      loadedReminders = remindersStr
+          .split(',')
+          .map((e) => int.parse(e))
+          .toList();
+    }
+
+    return Subscription(
+      id: map['id'],
+      name: map['name'],
+      price: (map['price'] as num).toDouble(),
+      period: SubscriptionPeriod.values[map['period'] as int],
+      firstBillDate: DateTime.parse(map['first_bill_date']),
+      reminders: loadedReminders,
+    );
+  }
 
   /// Calculates the next renewal date based on [firstBillDate] and [period].
   /// It finds the next occurrence on or after [from].
@@ -87,13 +137,13 @@ class Subscription extends Equatable {
   String get periodString {
     switch (period) {
       case SubscriptionPeriod.weekly:
-        return 'Weekly';
+        return 'Mingguan';
       case SubscriptionPeriod.monthly:
-        return 'Monthly';
+        return 'Bulanan';
       case SubscriptionPeriod.quarterly:
-        return 'Quarterly';
+        return 'Kuartal';
       case SubscriptionPeriod.yearly:
-        return 'Yearly';
+        return 'Tahunan';
     }
   }
 

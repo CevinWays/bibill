@@ -5,7 +5,9 @@ import 'package:intl/intl.dart';
 import '../cubits/subscription_cubit.dart';
 import '../cubits/subscription_state.dart';
 import '../models/subscription.dart';
+import '../services/notification_service.dart';
 import 'add_subscription_page.dart';
+import 'subscription_detail_page.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -28,6 +30,15 @@ class HomePage extends StatelessWidget {
         elevation: 0,
         actions: [
           IconButton(
+            icon: const Icon(Icons.notifications_active, color: Colors.black),
+            onPressed: () {
+              NotificationService().showTestNotification();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Test notification scheduled...')),
+              );
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.sort, color: Colors.black),
             onPressed: () {
               // Sorting is automatic in Cubit for now, but we could add manual toggle here
@@ -43,7 +54,7 @@ class HomePage extends StatelessWidget {
           );
         },
         label: Text(
-          'Add Subscription',
+          'Tambah Langganan',
           style: GoogleFonts.outfit(fontWeight: FontWeight.w600),
         ),
         icon: const Icon(Icons.add),
@@ -64,11 +75,11 @@ class HomePage extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'No subscriptions yet',
+                    'Belum Ada Langganan',
                     style: GoogleFonts.outfit(fontSize: 18, color: Colors.grey),
                   ),
                   Text(
-                    'Add your first bill to get started',
+                    'Tambahkan Langganan Pertama Anda',
                     style: GoogleFonts.outfit(
                       fontSize: 14,
                       color: Colors.grey[400],
@@ -113,100 +124,112 @@ class _SubscriptionCard extends StatelessWidget {
       decimalDigits: 0,
     );
 
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => SubscriptionDetailPage(subscription: subscription),
           ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          children: [
-            Container(
-              width: 50,
-              height: 50,
-              decoration: BoxDecoration(
-                color: _getColorForName(subscription.name),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Center(
-                child: Text(
-                  subscription.name.isNotEmpty
-                      ? subscription.name[0].toUpperCase()
-                      : '?',
-                  style: GoogleFonts.outfit(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+        );
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 15,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            children: [
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: _getColorForName(subscription.name),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Center(
+                  child: Text(
+                    subscription.name.isNotEmpty
+                        ? subscription.name[0].toUpperCase()
+                        : '?',
+                    style: GoogleFonts.outfit(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      subscription.name,
+                      style: GoogleFonts.outfit(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      currencyFormatter.format(subscription.price),
+                      style: GoogleFonts.outfit(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    subscription.name,
+                    DateFormat('dd MMM').format(nextDate),
                     style: GoogleFonts.outfit(
-                      fontSize: 16,
+                      fontSize: 14,
                       fontWeight: FontWeight.bold,
+                      color: Colors.black,
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    currencyFormatter.format(subscription.price),
-                    style: GoogleFonts.outfit(
-                      fontSize: 14,
-                      color: Colors.grey[600],
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: daysLeft <= 3 ? Colors.red[50] : Colors.green[50],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      daysLeft == 0
+                          ? 'Hari ini'
+                          : (daysLeft < 0
+                                ? 'Terlambat'
+                                : '$daysLeft hari lagi'),
+                      style: GoogleFonts.outfit(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: daysLeft <= 3 ? Colors.red : Colors.green[700],
+                      ),
                     ),
                   ),
                 ],
               ),
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  DateFormat('dd MMM').format(nextDate),
-                  style: GoogleFonts.outfit(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: daysLeft <= 3 ? Colors.red[50] : Colors.green[50],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    daysLeft == 0
-                        ? 'Today'
-                        : (daysLeft < 0 ? 'Overdue' : '$daysLeft days left'),
-                    style: GoogleFonts.outfit(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: daysLeft <= 3 ? Colors.red : Colors.green[700],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
