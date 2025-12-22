@@ -137,6 +137,15 @@ class SubscriptionDetailPage extends StatelessWidget {
               DateFormat('dd MMMM yyyy').format(subscription.firstBillDate),
             ),
             const Divider(height: 32),
+            _buildDetailRow('Kategori', subscription.category),
+            if (subscription.freeTrialDays > 0) ...[
+              const Divider(height: 32),
+              _buildDetailRow(
+                'Masa Percobaan',
+                '${subscription.freeTrialDays} Hari',
+              ),
+            ],
+            const Divider(height: 32),
             _buildDetailRow(
               'Pengingat',
               subscription.reminders.isEmpty

@@ -18,7 +18,12 @@ class DatabaseHelper {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, filePath);
 
-    return await openDatabase(path, version: 1, onCreate: _createDB);
+    return await openDatabase(
+      path,
+      version: 2,
+      onCreate: _createDB,
+      onUpgrade: _upgradeDB,
+    );
   }
 
   Future _createDB(Database db, int version) async {
@@ -26,6 +31,8 @@ class DatabaseHelper {
     const textType = 'TEXT NOT NULL';
     const doubleType = 'REAL NOT NULL';
     const intType = 'INTEGER NOT NULL';
+    // New columns default: category 'Lainnya', free_trial_days 0
+    // We stick to the schema defined below.
 
     await db.execute('''
 CREATE TABLE subscriptions ( 
@@ -34,9 +41,23 @@ CREATE TABLE subscriptions (
   price $doubleType,
   period $intType,
   first_bill_date $textType,
-  reminders $textType
+  reminders $textType,
+  category $textType DEFAULT 'Lainnya',
+  free_trial_days $intType DEFAULT 0
   )
 ''');
+  }
+
+  Future _upgradeDB(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      // Add category and free_trial_days columns
+      await db.execute(
+        "ALTER TABLE subscriptions ADD COLUMN category TEXT DEFAULT 'Lainnya'",
+      );
+      await db.execute(
+        "ALTER TABLE subscriptions ADD COLUMN free_trial_days INTEGER DEFAULT 0",
+      );
+    }
   }
 
   Future<void> create(Subscription subscription) async {

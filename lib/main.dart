@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'services/notification_service.dart';
 import 'cubits/subscription_cubit.dart';
-import 'pages/home_page.dart';
+import 'pages/main_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,7 +28,7 @@ class BibillApp extends StatelessWidget {
           textTheme: GoogleFonts.outfitTextTheme(),
           scaffoldBackgroundColor: Colors.grey[50],
         ),
-        home: const HomePage(),
+        home: const MainScreen(),
       ),
     );
   }

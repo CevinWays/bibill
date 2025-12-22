@@ -9,6 +9,8 @@ class Subscription extends Equatable {
   final SubscriptionPeriod period;
   final DateTime firstBillDate;
   final List<int> reminders;
+  final String category;
+  final int freeTrialDays;
 
   const Subscription({
     String? id,
@@ -17,6 +19,9 @@ class Subscription extends Equatable {
     required this.period,
     required this.firstBillDate,
     this.reminders = const [],
+
+    this.category = 'Lainnya',
+    this.freeTrialDays = 0,
   }) : id =
            id ??
            ''; // Empty string temporarily, will be UUID if not provided by caller or DB
@@ -28,6 +33,9 @@ class Subscription extends Equatable {
     SubscriptionPeriod? period,
     DateTime? firstBillDate,
     List<int>? reminders,
+
+    String? category,
+    int? freeTrialDays,
   }) {
     return Subscription(
       id: id ?? this.id,
@@ -36,6 +44,9 @@ class Subscription extends Equatable {
       period: period ?? this.period,
       firstBillDate: firstBillDate ?? this.firstBillDate,
       reminders: reminders ?? this.reminders,
+
+      category: category ?? this.category,
+      freeTrialDays: freeTrialDays ?? this.freeTrialDays,
     );
   }
 
@@ -47,6 +58,9 @@ class Subscription extends Equatable {
       'period': period.index,
       'first_bill_date': firstBillDate.toIso8601String(),
       'reminders': reminders.join(','),
+
+      'category': category,
+      'free_trial_days': freeTrialDays,
     };
   }
 
@@ -67,6 +81,9 @@ class Subscription extends Equatable {
       period: SubscriptionPeriod.values[map['period'] as int],
       firstBillDate: DateTime.parse(map['first_bill_date']),
       reminders: loadedReminders,
+
+      category: map['category'] ?? 'Lainnya',
+      freeTrialDays: map['free_trial_days'] as int? ?? 0,
     );
   }
 
@@ -155,5 +172,84 @@ class Subscription extends Equatable {
     period,
     firstBillDate,
     reminders,
+    category,
+    freeTrialDays,
   ];
+
+  /// Returns the cost incurred in a specific [month] (1-12) of [year].
+  /// This is an estimation for charts/stats.
+  double costInMonth(int month, int year) {
+    final start = DateTime(
+      firstBillDate.year,
+      firstBillDate.month,
+      firstBillDate.day,
+    );
+
+    final targetMonthEnd = DateTime(year, month + 1, 0);
+
+    if (start.isAfter(targetMonthEnd)) return 0.0;
+
+    double total = 0.0;
+    DateTime cursor = start;
+    int iterations = 0;
+
+    // We iterate until cursor passes the target month
+    while (cursor.isBefore(targetMonthEnd.add(const Duration(days: 1))) &&
+        iterations < 10000) {
+      iterations++;
+
+      if (cursor.year == year && cursor.month == month) {
+        final daysSinceStart = cursor.difference(start).inDays;
+        if (daysSinceStart >= freeTrialDays) {
+          total += price;
+        }
+      }
+
+      // Calculate next billing date
+      switch (period) {
+        case SubscriptionPeriod.weekly:
+          cursor = cursor.add(const Duration(days: 7));
+          break;
+        case SubscriptionPeriod.monthly:
+          int nextM = cursor.month + 1;
+          int nextY = cursor.year;
+          if (nextM > 12) {
+            nextM = 1;
+            nextY++;
+          }
+          int daysInNext = DateTime(nextY, nextM + 1, 0).day;
+          int targetDay = start.day;
+          if (targetDay > daysInNext) targetDay = daysInNext;
+          cursor = DateTime(nextY, nextM, targetDay);
+          break;
+        case SubscriptionPeriod.quarterly:
+          for (int i = 0; i < 3; i++) {
+            int nextM = cursor.month + 1;
+            int nextY = cursor.year;
+            if (nextM > 12) {
+              nextM = 1;
+              nextY++;
+            }
+            int daysInNext = DateTime(nextY, nextM + 1, 0).day;
+            int targetDay = start.day;
+            if (targetDay > daysInNext) targetDay = daysInNext;
+            cursor = DateTime(nextY, nextM, targetDay);
+          }
+          break;
+        case SubscriptionPeriod.yearly:
+          int nextY = cursor.year + 1;
+          int nextM = start.month;
+          int targetDay = start.day;
+          if (start.month == 2 && start.day == 29) {
+            bool isLeap =
+                (nextY % 4 == 0) && ((nextY % 100 != 0) || (nextY % 400 == 0));
+            if (!isLeap) targetDay = 28;
+          }
+          cursor = DateTime(nextY, nextM, targetDay);
+          break;
+      }
+    }
+
+    return total;
+  }
 }

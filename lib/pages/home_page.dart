@@ -90,16 +90,141 @@ class HomePage extends StatelessWidget {
             );
           }
 
-          return ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: state.subscriptions.length,
-            separatorBuilder: (c, i) => const SizedBox(height: 12),
-            itemBuilder: (context, index) {
-              final sub = state.subscriptions[index];
-              return _SubscriptionCard(subscription: sub);
-            },
+          // Calculations
+          final totalSubs = state.subscriptions.length;
+          final totalCost = state.subscriptions.fold(
+            0.0,
+            (sum, sub) => sum + sub.price,
+          );
+
+          final now = DateTime.now();
+          final endOfWeek = now.add(const Duration(days: 7));
+          final weeklyCost = state.subscriptions.fold(0.0, (sum, sub) {
+            final next = sub.nextRenewal();
+            // Check if next renewal is within now and now+7days
+            // Normalize dates to be safe (though nextRenewal usually returns date with time?)
+            // subscription.dart nextRenewal returns date logic.
+            // Let's compare timestamps.
+            if (next.isAfter(now.subtract(const Duration(days: 1))) &&
+                next.isBefore(endOfWeek)) {
+              return sum + sub.price;
+            }
+            return sum;
+          });
+
+          final currencyFormatter = NumberFormat.compactCurrency(
+            locale: 'id_ID',
+            symbol: 'Rp',
+            decimalDigits: 0,
+          ); // Compact for grid to save space? or normal? Normal might be too long.
+          // Let's use simple currency format but maybe shorten if needed.
+
+          return CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: GridView.count(
+                    crossAxisCount: 3,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
+                    childAspectRatio: 1.0, // Square items
+                    children: [
+                      _buildStatCard(
+                        'Total\nLangganan',
+                        totalSubs.toString(),
+                        Colors.blue,
+                        Icons.subscriptions,
+                      ),
+                      _buildStatCard(
+                        'Total\nTagihan',
+                        currencyFormatter.format(totalCost),
+                        Colors.orange,
+                        Icons.attach_money,
+                      ),
+                      _buildStatCard(
+                        'Tagihan\nMinggu Ini',
+                        currencyFormatter.format(weeklyCost),
+                        Colors.red,
+                        Icons.calendar_today,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    final sub = state.subscriptions[index];
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: _SubscriptionCard(subscription: sub),
+                    );
+                  }, childCount: state.subscriptions.length),
+                ),
+              ),
+              // Add some bottom padding for FAB
+              const SliverToBoxAdapter(child: SizedBox(height: 80)),
+            ],
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildStatCard(
+    String title,
+    String value,
+    Color color,
+    IconData icon,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: color, size: 24),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: GoogleFonts.outfit(
+              fontSize: 16, // Slightly smaller to fit
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.outfit(
+              fontSize: 10,
+              color: Colors.grey[600],
+              fontWeight: FontWeight.w500,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
       ),
     );
   }

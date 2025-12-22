@@ -19,9 +19,18 @@ class _AddSubscriptionPageState extends State<AddSubscriptionPage> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
   late TextEditingController _priceController;
+  late TextEditingController _freeTrialController;
 
   late SubscriptionPeriod _selectedPeriod;
   late DateTime _selectedDate;
+  String _selectedCategory = 'Lainnya';
+  final List<String> _categories = [
+    'Musik',
+    'Movie',
+    'Work',
+    'Disatukan',
+    'Lainnya',
+  ]; // Added 'Disatukan' (Bundle) or keep simple? 'Musik', 'Movie', 'Work', 'Lainnya'
 
   bool _remind7Days = false;
   bool _remind1Day = false;
@@ -35,9 +44,19 @@ class _AddSubscriptionPageState extends State<AddSubscriptionPage> {
     _priceController = TextEditingController(
       text: sub != null ? sub.price.toStringAsFixed(0) : '',
     );
+    _freeTrialController = TextEditingController(
+      text: sub != null ? sub.freeTrialDays.toString() : '',
+    );
 
     _selectedPeriod = sub?.period ?? SubscriptionPeriod.monthly;
     _selectedDate = sub?.firstBillDate ?? DateTime.now();
+    _selectedCategory = sub?.category ?? 'Lainnya';
+
+    if (_categories.contains(_selectedCategory) == false) {
+      // Handle case if category not in list (legacy data or custom)
+      if (!_categories.contains('Lainnya')) _categories.add('Lainnya');
+      _selectedCategory = 'Lainnya';
+    }
 
     if (sub != null) {
       _remind7Days = sub.reminders.contains(7);
@@ -49,6 +68,7 @@ class _AddSubscriptionPageState extends State<AddSubscriptionPage> {
   void dispose() {
     _nameController.dispose();
     _priceController.dispose();
+    _freeTrialController.dispose();
     super.dispose();
   }
 
@@ -70,6 +90,8 @@ class _AddSubscriptionPageState extends State<AddSubscriptionPage> {
     if (_formKey.currentState!.validate()) {
       final name = _nameController.text;
       final price = double.tryParse(_priceController.text) ?? 0.0;
+      final freeTrialDays = int.tryParse(_freeTrialController.text) ?? 0;
+
       final reminders = <int>[];
       if (_remind7Days) reminders.add(7);
       if (_remind1Day) reminders.add(1);
@@ -88,6 +110,8 @@ class _AddSubscriptionPageState extends State<AddSubscriptionPage> {
         period: _selectedPeriod,
         firstBillDate: _selectedDate,
         reminders: reminders,
+        category: _selectedCategory,
+        freeTrialDays: freeTrialDays,
       );
 
       if (isEditing) {
@@ -138,6 +162,19 @@ class _AddSubscriptionPageState extends State<AddSubscriptionPage> {
                 decoration: _inputDecoration('Contoh Rp50000', prefix: 'Rp '),
                 validator: (v) =>
                     v == null || v.isEmpty ? 'Masukkan harga' : null,
+              ),
+              const SizedBox(height: 20),
+
+              _buildLabel('Kategori'),
+              DropdownButtonFormField<String>(
+                value: _selectedCategory,
+                decoration: _inputDecoration(''),
+                items: _categories.map((c) {
+                  return DropdownMenuItem(value: c, child: Text(c));
+                }).toList(),
+                onChanged: (v) {
+                  if (v != null) setState(() => _selectedCategory = v);
+                },
               ),
               const SizedBox(height: 20),
 
@@ -197,7 +234,32 @@ class _AddSubscriptionPageState extends State<AddSubscriptionPage> {
                   ),
                 ],
               ),
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildLabel('Masa Percobaan (Hari)'),
+                        TextFormField(
+                          controller: _freeTrialController,
+                          keyboardType: TextInputType.number,
+                          decoration: _inputDecoration('0', prefix: ''),
+                          validator: (v) {
+                            if (v == null || v.isEmpty)
+                              return null; // Optional, defaults to 0
+                            if (int.tryParse(v) == null)
+                              return 'Angka tidak valid';
+                            return null;
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 24),
+
               _buildLabel('Pengingat'),
               const SizedBox(height: 8),
               Container(
