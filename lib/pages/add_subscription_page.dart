@@ -41,6 +41,15 @@ class _AddSubscriptionPageState extends State<AddSubscriptionPage> {
     'assets/icons/cardiogram.png',
     'assets/icons/drop.png',
     'assets/icons/thunder.png',
+    'assets/icons/facebook.png',
+    'assets/icons/instagram.png',
+    'assets/icons/google.png',
+    'assets/icons/shopee.png',
+    'assets/icons/amazon.png',
+    'assets/icons/tiktok.png',
+    'assets/icons/tokopedia.png',
+    'assets/icons/youtube.png',
+    'assets/icons/icloud.png',
   ];
   String? _selectedIcon;
 
