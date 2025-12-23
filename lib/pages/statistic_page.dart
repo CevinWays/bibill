@@ -5,6 +5,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import '../cubits/subscription_cubit.dart';
 import '../cubits/subscription_state.dart';
+import '../models/subscription.dart';
 
 class StatisticPage extends StatelessWidget {
   const StatisticPage({super.key});
@@ -12,16 +13,16 @@ class StatisticPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
           'Statistik',
           style: GoogleFonts.outfit(
             fontWeight: FontWeight.bold,
-            color: Colors.black,
+            color: Theme.of(context).textTheme.bodyLarge?.color,
           ),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         centerTitle: false,
       ),
@@ -98,7 +99,7 @@ class StatisticPage extends StatelessWidget {
                   height: 300,
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
@@ -134,8 +135,9 @@ class StatisticPage extends StatelessWidget {
                             showTitles: true,
                             getTitlesWidget: (value, meta) {
                               final index = value.toInt();
-                              if (index < 0 || index >= monthlyData.length)
+                              if (index < 0 || index >= monthlyData.length) {
                                 return const SizedBox();
+                              }
                               return Padding(
                                 padding: const EdgeInsets.only(top: 8.0),
                                 child: Text(
@@ -199,7 +201,7 @@ class StatisticPage extends StatelessWidget {
                     margin: const EdgeInsets.only(bottom: 12),
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Theme.of(context).cardColor,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
@@ -208,6 +210,7 @@ class StatisticPage extends StatelessWidget {
                         Text(
                           '${d['label']} ${d['year']}',
                           style: GoogleFonts.outfit(
+                            color: Theme.of(context).textTheme.bodyLarge?.color,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -218,6 +221,7 @@ class StatisticPage extends StatelessWidget {
                             decimalDigits: 0,
                           ).format(d['total']),
                           style: GoogleFonts.outfit(
+                            color: Theme.of(context).textTheme.bodyLarge?.color,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -225,6 +229,149 @@ class StatisticPage extends StatelessWidget {
                     ),
                   );
                 }),
+                const SizedBox(height: 24),
+                // Ranking Section
+                Text(
+                  'Peringkat Pengeluaran',
+                  style: GoogleFonts.outfit(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).cardColor,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      ...() {
+                        final List<Subscription> sortedSubs =
+                            List<Subscription>.from(state.subscriptions);
+                        sortedSubs.sort(
+                          (a, b) => b.monthlyCost.compareTo(a.monthlyCost),
+                        );
+
+                        if (sortedSubs.isEmpty) {
+                          return <Widget>[
+                            Text(
+                              'Belum ada data',
+                              style: GoogleFonts.outfit(color: Colors.grey),
+                            ),
+                          ];
+                        }
+
+                        return sortedSubs.asMap().entries.map((entry) {
+                          final index = entry.key;
+                          final sub = entry.value;
+                          final isLast = index == sortedSubs.length - 1;
+
+                          return Column(
+                            children: [
+                              Row(
+                                children: [
+                                  // Rank number
+                                  Container(
+                                    width: 24,
+                                    height: 24,
+                                    decoration: BoxDecoration(
+                                      color: index < 3
+                                          ? Theme.of(context).primaryColor
+                                          : Colors.grey[200],
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        '${index + 1}',
+                                        style: GoogleFonts.outfit(
+                                          color: index < 3
+                                              ? Colors.white
+                                              : Colors.grey[600],
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          sub.name,
+                                          style: GoogleFonts.outfit(
+                                            color: Theme.of(
+                                              context,
+                                            ).textTheme.bodyLarge?.color,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        Text(
+                                          '${NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0).format(sub.price)} / ${sub.periodString}',
+                                          style: GoogleFonts.outfit(
+                                            fontSize: 12,
+                                            color: Colors.grey[600],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      Text(
+                                        NumberFormat.compactCurrency(
+                                          locale: 'id_ID',
+                                          symbol: 'Rp',
+                                          decimalDigits: 0,
+                                        ).format(sub.monthlyCost),
+                                        style: GoogleFonts.outfit(
+                                          fontWeight: FontWeight.bold,
+                                          color: Theme.of(
+                                            context,
+                                          ).textTheme.bodyLarge?.color,
+                                        ),
+                                      ),
+                                      Text(
+                                        '/ bln',
+                                        style: GoogleFonts.outfit(
+                                          fontSize: 10,
+                                          color: Colors.grey[600],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              if (!isLast)
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                  ),
+                                  child: Divider(
+                                    height: 1,
+                                    color: Colors.grey.withValues(alpha: 0.1),
+                                  ),
+                                ),
+                            ],
+                          );
+                        }).toList();
+                      }(),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 80), // Bottom padding
               ],
             ),
           );

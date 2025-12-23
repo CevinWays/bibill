@@ -94,7 +94,38 @@ class SubscriptionCubit extends Cubit<SubscriptionState> {
     }
   }
 
-  void _sortSubscriptions(List<Subscription> list) {
-    list.sort((a, b) => a.nextRenewal().compareTo(b.nextRenewal()));
+  void changeSortOption(SortOption option) {
+    // If option is same, do nothing
+    if (state.sortOption == option) return;
+
+    // Create a new list to sort
+    final sortedList = List<Subscription>.from(state.subscriptions);
+    _sortSubscriptions(sortedList, option);
+
+    emit(state.copyWith(subscriptions: sortedList, sortOption: option));
+  }
+
+  void _sortSubscriptions(List<Subscription> list, [SortOption? option]) {
+    final sortOption = option ?? state.sortOption;
+    switch (sortOption) {
+      case SortOption.renewalDate:
+        list.sort((a, b) => a.nextRenewal().compareTo(b.nextRenewal()));
+        break;
+      case SortOption.priceLowHigh:
+        list.sort((a, b) => a.price.compareTo(b.price));
+        break;
+      case SortOption.priceHighLow:
+        list.sort((a, b) => b.price.compareTo(a.price));
+        break;
+    }
+  }
+
+  void selectCategory(String? category) {
+    if (state.selectedCategory == category) return;
+    emit(state.copyWith(selectedCategory: category));
+  }
+
+  void searchSubscriptions(String query) {
+    emit(state.copyWith(searchQuery: query));
   }
 }

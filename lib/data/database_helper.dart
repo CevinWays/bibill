@@ -20,7 +20,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -31,8 +31,8 @@ class DatabaseHelper {
     const textType = 'TEXT NOT NULL';
     const doubleType = 'REAL NOT NULL';
     const intType = 'INTEGER NOT NULL';
+    const textNullable = 'TEXT';
     // New columns default: category 'Lainnya', free_trial_days 0
-    // We stick to the schema defined below.
 
     await db.execute('''
 CREATE TABLE subscriptions ( 
@@ -43,7 +43,8 @@ CREATE TABLE subscriptions (
   first_bill_date $textType,
   reminders $textType,
   category $textType DEFAULT 'Lainnya',
-  free_trial_days $intType DEFAULT 0
+  free_trial_days $intType DEFAULT 0,
+  icon_path $textNullable
   )
 ''');
   }
@@ -57,6 +58,9 @@ CREATE TABLE subscriptions (
       await db.execute(
         "ALTER TABLE subscriptions ADD COLUMN free_trial_days INTEGER DEFAULT 0",
       );
+    }
+    if (oldVersion < 3) {
+      await db.execute("ALTER TABLE subscriptions ADD COLUMN icon_path TEXT");
     }
   }
 

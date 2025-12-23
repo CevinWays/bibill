@@ -5,8 +5,7 @@ import 'package:intl/intl.dart';
 import '../cubits/subscription_cubit.dart';
 import '../cubits/subscription_state.dart';
 import '../models/subscription.dart';
-import '../services/notification_service.dart';
-import 'add_subscription_page.dart';
+import 'settings_page.dart';
 import 'subscription_detail_page.dart';
 
 class HomePage extends StatelessWidget {
@@ -15,51 +14,113 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
           'Bibill',
           style: GoogleFonts.outfit(
             fontSize: 28,
             fontWeight: FontWeight.bold,
-            color: Colors.black,
+            color: Theme.of(context).textTheme.bodyLarge?.color,
           ),
         ),
         centerTitle: false,
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         actions: [
-          // IconButton(
-          //   icon: const Icon(Icons.notifications_active, color: Colors.black),
-          //   onPressed: () {
-          //     NotificationService().showTestNotification();
-          //     ScaffoldMessenger.of(context).showSnackBar(
-          //       const SnackBar(content: Text('Test notification scheduled...')),
-          //     );
-          //   },
-          // ),
           IconButton(
-            icon: const Icon(Icons.sort, color: Colors.black),
+            icon: Icon(Icons.sort, color: Theme.of(context).iconTheme.color),
             onPressed: () {
-              // Sorting is automatic in Cubit for now, but we could add manual toggle here
+              showModalBottomSheet(
+                context: context,
+                backgroundColor: Theme.of(context).cardColor,
+                builder: (context) => Container(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Urutkan Berdasarkan',
+                        style: GoogleFonts.outfit(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      ListTile(
+                        leading: Icon(
+                          Icons.calendar_today,
+                          color: Theme.of(context).iconTheme.color,
+                        ),
+                        title: Text(
+                          'Tanggal Pembayaran',
+                          style: GoogleFonts.outfit(
+                            color: Theme.of(context).textTheme.bodyLarge?.color,
+                          ),
+                        ),
+                        onTap: () {
+                          context.read<SubscriptionCubit>().changeSortOption(
+                            SortOption.renewalDate,
+                          );
+                          Navigator.pop(context);
+                        },
+                      ),
+                      ListTile(
+                        leading: Icon(
+                          Icons.arrow_upward,
+                          color: Theme.of(context).iconTheme.color,
+                        ),
+                        title: Text(
+                          'Harga Terendah',
+                          style: GoogleFonts.outfit(
+                            color: Theme.of(context).textTheme.bodyLarge?.color,
+                          ),
+                        ),
+                        onTap: () {
+                          context.read<SubscriptionCubit>().changeSortOption(
+                            SortOption.priceLowHigh,
+                          );
+                          Navigator.pop(context);
+                        },
+                      ),
+                      ListTile(
+                        leading: Icon(
+                          Icons.arrow_downward,
+                          color: Theme.of(context).iconTheme.color,
+                        ),
+                        title: Text(
+                          'Harga Tertinggi',
+                          style: GoogleFonts.outfit(
+                            color: Theme.of(context).textTheme.bodyLarge?.color,
+                          ),
+                        ),
+                        onTap: () {
+                          context.read<SubscriptionCubit>().changeSortOption(
+                            SortOption.priceHighLow,
+                          );
+                          Navigator.pop(context);
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+          IconButton(
+            icon: Icon(
+              Icons.settings,
+              color: Theme.of(context).iconTheme.color,
+            ),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SettingsPage()),
+              );
             },
           ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const AddSubscriptionPage()),
-          );
-        },
-        label: Text(
-          'Tambah Langganan',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.w600),
-        ),
-        icon: const Icon(Icons.add),
-        backgroundColor: Colors.black, // Modern look
-        foregroundColor: Colors.white,
       ),
       body: BlocBuilder<SubscriptionCubit, SubscriptionState>(
         builder: (context, state) {
@@ -123,33 +184,99 @@ class HomePage extends StatelessWidget {
             slivers: [
               SliverToBoxAdapter(
                 child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                  child: TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Cari langganan...',
+                      hintStyle: GoogleFonts.outfit(color: Colors.grey),
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: Theme.of(context).primaryColor,
+                      ),
+                      filled: true,
+                      fillColor: Theme.of(context).cardColor,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(30),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 0,
+                      ),
+                    ),
+                    style: GoogleFonts.outfit(
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
+                    ),
+                    onChanged: (value) {
+                      context.read<SubscriptionCubit>().searchSubscriptions(
+                        value,
+                      );
+                    },
+                  ),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: GridView.count(
-                    crossAxisCount: 3,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    crossAxisSpacing: 10,
-                    mainAxisSpacing: 10,
-                    childAspectRatio: 1.0, // Square items
+                  child: Row(
                     children: [
-                      _buildStatCard(
-                        'Total\nLangganan',
-                        totalSubs.toString(),
-                        Colors.blue,
-                        Icons.subscriptions,
+                      Expanded(
+                        child: _buildStatCard(
+                          'Total\nLangganan',
+                          totalSubs.toString(),
+                          Colors.blue,
+                          Icons.subscriptions,
+                        ),
                       ),
-                      _buildStatCard(
-                        'Total\nTagihan',
-                        currencyFormatter.format(totalCost),
-                        Colors.orange,
-                        Icons.payments_rounded,
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _buildStatCard(
+                          'Total\nTagihan',
+                          currencyFormatter.format(totalCost),
+                          Colors.orange,
+                          Icons.payments_rounded,
+                        ),
                       ),
-                      _buildStatCard(
-                        'Tagihan\nMinggu Ini',
-                        currencyFormatter.format(weeklyCost),
-                        Colors.red,
-                        Icons.calendar_today,
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _buildStatCard(
+                          'Tagihan\nMinggu Ini',
+                          currencyFormatter.format(weeklyCost),
+                          Colors.red,
+                          Icons.calendar_today,
+                        ),
                       ),
+                    ],
+                  ),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      _buildFilterChip(
+                        context,
+                        label: 'Semua',
+                        isSelected: state.selectedCategory == null,
+                        onSelected: () => context
+                            .read<SubscriptionCubit>()
+                            .selectCategory(null),
+                      ),
+                      ...state.subscriptions
+                          .map((s) => s.category)
+                          .toSet()
+                          .map(
+                            (category) => _buildFilterChip(
+                              context,
+                              label: category,
+                              isSelected: state.selectedCategory == category,
+                              onSelected: () => context
+                                  .read<SubscriptionCubit>()
+                                  .selectCategory(category),
+                            ),
+                          ),
                     ],
                   ),
                 ),
@@ -160,13 +287,40 @@ class HomePage extends StatelessWidget {
                   vertical: 8,
                 ),
                 sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate((context, index) {
-                    final sub = state.subscriptions[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: _SubscriptionCard(subscription: sub),
-                    );
-                  }, childCount: state.subscriptions.length),
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      final filteredSubs = state.subscriptions.where((s) {
+                        final matchCategory =
+                            state.selectedCategory == null ||
+                            s.category == state.selectedCategory;
+                        final matchSearch =
+                            state.searchQuery.isEmpty ||
+                            s.name.toLowerCase().contains(
+                              state.searchQuery.toLowerCase(),
+                            );
+                        return matchCategory && matchSearch;
+                      }).toList();
+
+                      if (index >= filteredSubs.length) return null;
+
+                      final sub = filteredSubs[index];
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: _SubscriptionCard(subscription: sub),
+                      );
+                    },
+                    childCount: state.subscriptions.where((s) {
+                      final matchCategory =
+                          state.selectedCategory == null ||
+                          s.category == state.selectedCategory;
+                      final matchSearch =
+                          state.searchQuery.isEmpty ||
+                          s.name.toLowerCase().contains(
+                            state.searchQuery.toLowerCase(),
+                          );
+                      return matchCategory && matchSearch;
+                    }).length,
+                  ),
                 ),
               ),
               // Add some bottom padding for FAB
@@ -228,6 +382,45 @@ class HomePage extends StatelessWidget {
       ),
     );
   }
+
+  Widget _buildFilterChip(
+    BuildContext context, {
+    required String label,
+    required bool isSelected,
+    required VoidCallback onSelected,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: GestureDetector(
+        onTap: onSelected,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? Theme.of(context).primaryColor
+                : Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: isSelected
+                  ? Theme.of(context).primaryColor
+                  : Colors.grey.withValues(alpha: 0.2),
+            ),
+          ),
+          child: Text(
+            label,
+            style: GoogleFonts.outfit(
+              color: isSelected
+                  ? Colors.white
+                  : Theme.of(context).textTheme.bodyLarge?.color,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+              fontSize: 14,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _SubscriptionCard extends StatelessWidget {
@@ -260,7 +453,7 @@ class _SubscriptionCard extends StatelessWidget {
       },
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
@@ -278,21 +471,34 @@ class _SubscriptionCard extends StatelessWidget {
                 width: 50,
                 height: 50,
                 decoration: BoxDecoration(
-                  color: _getColorForName(subscription.name),
-                  borderRadius: BorderRadius.circular(14),
+                  color: subscription.iconPath != null
+                      ? Colors.transparent
+                      : Colors
+                            .primaries[subscription.name.length %
+                                Colors.primaries.length]
+                            .withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(15),
                 ),
-                child: Center(
-                  child: Text(
-                    subscription.name.isNotEmpty
-                        ? subscription.name[0].toUpperCase()
-                        : '?',
-                    style: GoogleFonts.outfit(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
+                child: subscription.iconPath != null
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(15),
+                        child: Image.asset(
+                          subscription.iconPath!,
+                          fit: BoxFit.cover,
+                        ),
+                      )
+                    : Center(
+                        child: Text(
+                          subscription.name[0].toUpperCase(),
+                          style: GoogleFonts.outfit(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color:
+                                Colors.primaries[subscription.name.length %
+                                    Colors.primaries.length],
+                          ),
+                        ),
+                      ),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -303,6 +509,7 @@ class _SubscriptionCard extends StatelessWidget {
                       subscription.name,
                       style: GoogleFonts.outfit(
                         fontSize: 16,
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -325,7 +532,7 @@ class _SubscriptionCard extends StatelessWidget {
                     style: GoogleFonts.outfit(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black,
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -358,21 +565,5 @@ class _SubscriptionCard extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  Color _getColorForName(String name) {
-    if (name.isEmpty) return Colors.grey;
-    final colors = [
-      const Color(0xFFE91E63), // Pink
-      const Color(0xFF9C27B0), // Purple
-      const Color(0xFF2196F3), // Blue
-      const Color(0xFF00BCD4), // Cyan
-      const Color(0xFF009688), // Teal
-      const Color(0xFFFF9800), // Orange
-      const Color(0xFF607D8B), // Blue Grey
-      const Color(0xFF3F51B5), // Indigo
-    ];
-    // Hash code to pick a consistent color
-    return colors[name.hashCode.abs() % colors.length];
   }
 }

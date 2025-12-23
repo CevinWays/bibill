@@ -11,6 +11,7 @@ class Subscription extends Equatable {
   final List<int> reminders;
   final String category;
   final int freeTrialDays;
+  final String? iconPath;
 
   const Subscription({
     String? id,
@@ -22,6 +23,7 @@ class Subscription extends Equatable {
 
     this.category = 'Lainnya',
     this.freeTrialDays = 0,
+    this.iconPath,
   }) : id =
            id ??
            ''; // Empty string temporarily, will be UUID if not provided by caller or DB
@@ -36,6 +38,7 @@ class Subscription extends Equatable {
 
     String? category,
     int? freeTrialDays,
+    String? iconPath,
   }) {
     return Subscription(
       id: id ?? this.id,
@@ -47,6 +50,7 @@ class Subscription extends Equatable {
 
       category: category ?? this.category,
       freeTrialDays: freeTrialDays ?? this.freeTrialDays,
+      iconPath: iconPath ?? this.iconPath,
     );
   }
 
@@ -61,6 +65,7 @@ class Subscription extends Equatable {
 
       'category': category,
       'free_trial_days': freeTrialDays,
+      'icon_path': iconPath,
     };
   }
 
@@ -84,6 +89,7 @@ class Subscription extends Equatable {
 
       category: map['category'] ?? 'Lainnya',
       freeTrialDays: map['free_trial_days'] as int? ?? 0,
+      iconPath: map['icon_path'],
     );
   }
 
@@ -164,6 +170,19 @@ class Subscription extends Equatable {
     }
   }
 
+  double get monthlyCost {
+    switch (period) {
+      case SubscriptionPeriod.weekly:
+        return price * 4.33; // Average weeks in a month
+      case SubscriptionPeriod.monthly:
+        return price;
+      case SubscriptionPeriod.quarterly:
+        return price / 3;
+      case SubscriptionPeriod.yearly:
+        return price / 12;
+    }
+  }
+
   @override
   List<Object?> get props => [
     id,
@@ -174,6 +193,7 @@ class Subscription extends Equatable {
     reminders,
     category,
     freeTrialDays,
+    iconPath,
   ];
 
   /// Returns the cost incurred in a specific [month] (1-12) of [year].

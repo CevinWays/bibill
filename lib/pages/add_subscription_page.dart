@@ -35,6 +35,15 @@ class _AddSubscriptionPageState extends State<AddSubscriptionPage> {
   bool _remind7Days = false;
   bool _remind1Day = false;
 
+  final List<String> _availableIcons = [
+    'assets/icons/netflix.png',
+    'assets/icons/spotify.png',
+    'assets/icons/cardiogram.png',
+    'assets/icons/drop.png',
+    'assets/icons/thunder.png',
+  ];
+  String? _selectedIcon;
+
   @override
   void initState() {
     super.initState();
@@ -61,6 +70,7 @@ class _AddSubscriptionPageState extends State<AddSubscriptionPage> {
     if (sub != null) {
       _remind7Days = sub.reminders.contains(7);
       _remind1Day = sub.reminders.contains(1);
+      _selectedIcon = sub.iconPath;
     }
   }
 
@@ -112,6 +122,7 @@ class _AddSubscriptionPageState extends State<AddSubscriptionPage> {
         reminders: reminders,
         category: _selectedCategory,
         freeTrialDays: freeTrialDays,
+        iconPath: _selectedIcon,
       );
 
       if (isEditing) {
@@ -247,10 +258,12 @@ class _AddSubscriptionPageState extends State<AddSubscriptionPage> {
                           keyboardType: TextInputType.number,
                           decoration: _inputDecoration('0', prefix: ''),
                           validator: (v) {
-                            if (v == null || v.isEmpty)
+                            if (v == null || v.isEmpty) {
                               return null; // Optional, defaults to 0
-                            if (int.tryParse(v) == null)
+                            }
+                            if (int.tryParse(v) == null) {
                               return 'Angka tidak valid';
+                            }
                             return null;
                           },
                         ),
@@ -258,6 +271,82 @@ class _AddSubscriptionPageState extends State<AddSubscriptionPage> {
                     ),
                   ),
                 ],
+              ),
+              const SizedBox(height: 16),
+
+              _buildLabel('Pilih Ikon (Opsional)'),
+              SizedBox(
+                height: 60,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _availableIcons.length + 1,
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(width: 12),
+                  itemBuilder: (context, index) {
+                    if (index == 0) {
+                      // Option to unselect/clear icon
+                      final isSelected = _selectedIcon == null;
+                      return GestureDetector(
+                        onTap: () => setState(() => _selectedIcon = null),
+                        child: Container(
+                          width: 50,
+                          height: 50,
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? Colors.deepPurple
+                                : Colors.white,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: isSelected
+                                  ? Colors.deepPurple
+                                  : Colors.grey[300]!,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.05),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Icon(
+                            Icons.block,
+                            color: isSelected ? Colors.white : Colors.grey,
+                            size: 20,
+                          ),
+                        ),
+                      );
+                    }
+                    final iconPath = _availableIcons[index - 1];
+                    final isSelected = _selectedIcon == iconPath;
+                    return GestureDetector(
+                      onTap: () => setState(() => _selectedIcon = iconPath),
+                      child: Container(
+                        width: 50,
+                        height: 50,
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: isSelected
+                                ? Colors.deepPurple
+                                : Colors.transparent,
+                            width: 2,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.05),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Image.asset(iconPath),
+                      ),
+                    );
+                  },
+                ),
               ),
               const SizedBox(height: 16),
 
