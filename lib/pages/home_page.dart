@@ -29,15 +29,15 @@ class HomePage extends StatelessWidget {
         backgroundColor: Colors.white,
         elevation: 0,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_active, color: Colors.black),
-            onPressed: () {
-              NotificationService().showTestNotification();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Test notification scheduled...')),
-              );
-            },
-          ),
+          // IconButton(
+          //   icon: const Icon(Icons.notifications_active, color: Colors.black),
+          //   onPressed: () {
+          //     NotificationService().showTestNotification();
+          //     ScaffoldMessenger.of(context).showSnackBar(
+          //       const SnackBar(content: Text('Test notification scheduled...')),
+          //     );
+          //   },
+          // ),
           IconButton(
             icon: const Icon(Icons.sort, color: Colors.black),
             onPressed: () {
@@ -142,7 +142,7 @@ class HomePage extends StatelessWidget {
                         'Total\nTagihan',
                         currencyFormatter.format(totalCost),
                         Colors.orange,
-                        Icons.attach_money,
+                        Icons.payments_rounded,
                       ),
                       _buildStatCard(
                         'Tagihan\nMinggu Ini',
@@ -187,7 +187,7 @@ class HomePage extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: color,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -200,14 +200,14 @@ class HomePage extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, color: color, size: 24),
+          Icon(icon, color: Colors.white, size: 24),
           const SizedBox(height: 8),
           Text(
             value,
             style: GoogleFonts.outfit(
               fontSize: 16, // Slightly smaller to fit
               fontWeight: FontWeight.bold,
-              color: Colors.black,
+              color: Colors.white,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -218,7 +218,7 @@ class HomePage extends StatelessWidget {
             textAlign: TextAlign.center,
             style: GoogleFonts.outfit(
               fontSize: 10,
-              color: Colors.grey[600],
+              color: Colors.white,
               fontWeight: FontWeight.w500,
             ),
             maxLines: 2,

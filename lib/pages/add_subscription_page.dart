@@ -140,7 +140,7 @@ class _AddSubscriptionPageState extends State<AddSubscriptionPage> {
         foregroundColor: Colors.black,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
+        padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
           child: Column(
@@ -149,21 +149,21 @@ class _AddSubscriptionPageState extends State<AddSubscriptionPage> {
               _buildLabel('Nama Layanan'),
               TextFormField(
                 controller: _nameController,
-                decoration: _inputDecoration('Contoh: Netflix, Spotify'),
+                decoration: _inputDecoration('Masukkan Nama'),
                 validator: (v) =>
                     v == null || v.isEmpty ? 'Masukkan nama' : null,
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
 
               _buildLabel('Harga'),
               TextFormField(
                 controller: _priceController,
                 keyboardType: TextInputType.number,
-                decoration: _inputDecoration('Contoh Rp50000', prefix: 'Rp '),
+                decoration: _inputDecoration('Masukkan Harga', prefix: 'Rp '),
                 validator: (v) =>
                     v == null || v.isEmpty ? 'Masukkan harga' : null,
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
 
               _buildLabel('Kategori'),
               DropdownButtonFormField<String>(
@@ -234,6 +234,7 @@ class _AddSubscriptionPageState extends State<AddSubscriptionPage> {
                   ),
                 ],
               ),
+              SizedBox(height: 16),
               Row(
                 children: [
                   Expanded(
@@ -258,7 +259,7 @@ class _AddSubscriptionPageState extends State<AddSubscriptionPage> {
                   ),
                 ],
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
 
               _buildLabel('Pengingat'),
               const SizedBox(height: 8),
